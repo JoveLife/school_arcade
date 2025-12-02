@@ -44,9 +44,9 @@
 
         /* --- [프로젝트 카드 시스템] --- */
         .project-card {
-            /* ✨ [핵심] 기본 설정값 (아무것도 안 적으면 이대로 적용됨) */
+            /* ✨ [핵심] 기본 설정값 (개별 카드에서 style로 덮어쓰기 가능) */
             --img-size: 100%;        /* 이미지 크기 */
-            --img-fit: cover;        /* 이미지 채우기 방식 */
+            --img-fit: cover;        /* cover: 꽉 채우기(잘림), contain: 다 보여주기(안 잘림) */
             --thumb-bg: #000;        /* 썸네일 배경색 */
             --img-radius: 0px;       /* 이미지 둥글기 */
 
@@ -76,11 +76,7 @@
             width: 100%;
             height: 200px;
             border-bottom: 1px solid #333;
-            
-            /* 변수 적용: 배경색 */
             background-color: var(--thumb-bg);
-            
-            /* 중앙 정렬 (이미지가 작아질 경우를 대비) */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -89,19 +85,15 @@
 
         /* 썸네일 이미지 */
         .thumb-container img {
-            /* 변수 적용: 크기, 비율, 둥글기 */
             width: var(--img-size);
             height: var(--img-size);
-            object-fit: var(--img-fit);
+            object-fit: var(--img-fit); /* 여기서 변수를 받아 fit을 결정함 */
             border-radius: var(--img-radius);
-            
             transition: transform 0.5s;
-            /* 이미지가 떴을 때 그림자 효과 */
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
         }
 
         .project-card:hover .thumb-container img {
-            /* 호버 시 이미지가 살짝 더 확대됨 */
             transform: scale(1.1); 
         }
 
@@ -125,6 +117,7 @@
             line-height: 1.4;
             margin-bottom: 15px;
             flex-grow: 1;
+            word-break: keep-all; 
         }
 
         .tags { margin-top: auto; }
@@ -137,6 +130,7 @@
             border: 1px solid var(--accent);
             color: var(--accent);
             background: rgba(100, 181, 246, 0.1);
+            margin-right: 5px;
         }
     </style>
 </head>
@@ -147,7 +141,7 @@
     <div class="grid-container">
         
         <a href="projects/worldcup/index.html" class="project-card" 
-           style="--img-size: 85%; --img-radius: 12px; --thumb-bg: #121212;">
+           style="--img-size: 85%; --img-radius: 12px; --thumb-bg: #121212; --img-fit: contain;">
             
             <div class="thumb-container">
                 <img src="projects/worldcup/thumb.png" alt="월드컵 미리보기" 
@@ -164,28 +158,34 @@
             </div>
         </a>
 
-        <a href="#" class="project-card">
+        <a href="projects/memory/index.html" class="project-card" 
+           style="--img-size: 90%; --img-radius: 8px; --thumb-bg: #1a1a1a; --img-fit: contain;">
+            
             <div class="thumb-container">
-                <img src="https://via.placeholder.com/400x250/333333/64b5f6/?text=Gallery+App" alt="예시">
+                <img src="projects/memory/thumb.png" alt="메모리 게임 미리보기" 
+                     onerror="this.parentElement.innerHTML='<span style=\'color:#555\'>이미지 없음</span>'">
             </div>
+            
             <div class="info">
-                <h2>사진 갤러리</h2>
-                <p>기본 스타일(100% 꽉 찬 이미지) 예시입니다. 별다른 설정 없이 깔끔하게 보입니다.</p>
+                <h2>네온 메모리 링크</h2>
+                <p>자동 카드 생성 및 수업용 '짝짓기 모드'를 지원하는 기억력 게임. 맞추면 빛나는 네온 효과가 특징입니다.</p>
                 <div class="tags">
-                    <span class="tag">Example</span>
+                    <span class="tag">Game</span>
+                    <span class="tag">Education</span>
+                    <span class="tag">JS</span>
                 </div>
             </div>
         </a>
 
-         <a href="#" class="project-card" style="--thumb-bg: #ffffff; --img-size: 70%;">
+         <a href="#" class="project-card" style="opacity: 0.5; pointer-events: none;">
             <div class="thumb-container">
-                <img src="https://via.placeholder.com/400x250/ffffff/000000/?text=Icon" alt="아이콘">
+                <img src="https://via.placeholder.com/400x250/1e1e1e/64b5f6/?text=Planning" alt="준비중">
             </div>
             <div class="info">
-                <h2>계산기 (준비중)</h2>
-                <p>배경색을 바꾸고 이미지를 작게 넣은 예시입니다.</p>
+                <h2>Coming Soon</h2>
+                <p>다음에 추가될 멋진 프로젝트를 기대해주세요.</p>
                 <div class="tags">
-                    <span class="tag">Planning</span>
+                    <span class="tag">Plan</span>
                 </div>
             </div>
         </a>
