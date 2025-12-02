@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Web Projects Arcade</title>
+    <style>
+        /* --- [기본 테마 설정] --- */
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --accent: #64b5f6;
+            --hover-glow: rgba(100, 181, 246, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Pretendard', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            text-shadow: 0 0 10px var(--accent);
+            font-weight: 700;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        /* --- [프로젝트 카드 시스템] --- */
+        .project-card {
+            /* ✨ [핵심] 기본 설정값 (아무것도 안 적으면 이대로 적용됨) */
+            --img-size: 100%;        /* 이미지 크기 */
+            --img-fit: cover;        /* 이미지 채우기 방식 */
+            --thumb-bg: #000;        /* 썸네일 배경색 */
+            --img-radius: 0px;       /* 이미지 둥글기 */
+
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid #333;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 10px var(--hover-glow);
+            border-color: var(--accent);
+            z-index: 10;
+        }
+
+        /* 썸네일 영역 */
+        .thumb-container {
+            width: 100%;
+            height: 200px;
+            border-bottom: 1px solid #333;
+            
+            /* 변수 적용: 배경색 */
+            background-color: var(--thumb-bg);
+            
+            /* 중앙 정렬 (이미지가 작아질 경우를 대비) */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* 썸네일 이미지 */
+        .thumb-container img {
+            /* 변수 적용: 크기, 비율, 둥글기 */
+            width: var(--img-size);
+            height: var(--img-size);
+            object-fit: var(--img-fit);
+            border-radius: var(--img-radius);
+            
+            transition: transform 0.5s;
+            /* 이미지가 떴을 때 그림자 효과 */
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+        }
+
+        .project-card:hover .thumb-container img {
+            /* 호버 시 이미지가 살짝 더 확대됨 */
+            transform: scale(1.1); 
+        }
+
+        /* 텍스트 정보 */
+        .info {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .info p {
+            font-size: 0.9rem;
+            color: #aaa;
+            line-height: 1.4;
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+
+        .tags { margin-top: auto; }
+
+        .tag {
+            display: inline-block;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+            border-radius: 20px;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            background: rgba(100, 181, 246, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🕹️ Project Arcade</h1>
+
+    <div class="grid-container">
+        
+        <a href="projects/worldcup/index.html" class="project-card" 
+           style="--img-size: 85%; --img-radius: 12px; --thumb-bg: #121212;">
+            
+            <div class="thumb-container">
+                <img src="projects/worldcup/thumb.png" alt="월드컵 미리보기" 
+                     onerror="this.parentElement.innerHTML='<span style=\'color:#555\'>이미지 없음</span>'">
+            </div>
+            
+            <div class="info">
+                <h2>이상형 월드컵</h2>
+                <p>나만의 사진 폴더로 진행하는 토너먼트 게임. 3D 홀로그램 UI와 부전승 시스템이 적용되었습니다.</p>
+                <div class="tags">
+                    <span class="tag">Game</span>
+                    <span class="tag">HTML/JS</span>
+                </div>
+            </div>
+        </a>
+
+        <a href="#" class="project-card">
+            <div class="thumb-container">
+                <img src="https://via.placeholder.com/400x250/333333/64b5f6/?text=Gallery+App" alt="예시">
+            </div>
+            <div class="info">
+                <h2>사진 갤러리</h2>
+                <p>기본 스타일(100% 꽉 찬 이미지) 예시입니다. 별다른 설정 없이 깔끔하게 보입니다.</p>
+                <div class="tags">
+                    <span class="tag">Example</span>
+                </div>
+            </div>
+        </a>
+
+         <a href="#" class="project-card" style="--thumb-bg: #ffffff; --img-size: 70%;">
+            <div class="thumb-container">
+                <img src="https://via.placeholder.com/400x250/ffffff/000000/?text=Icon" alt="아이콘">
+            </div>
+            <div class="info">
+                <h2>계산기 (준비중)</h2>
+                <p>배경색을 바꾸고 이미지를 작게 넣은 예시입니다.</p>
+                <div class="tags">
+                    <span class="tag">Planning</span>
+                </div>
+            </div>
+        </a>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>홀로그램 이상형 월드컵</title>
+    <style>
+        /* --- 다크 모드 스타일 --- */
+        :root {
+            --bg-color: #121212;       
+            --card-bg: #1e1e1e;        
+            --text-main: #e0e0e0;      
+            --text-sub: #a0a0a0;       
+            --accent: #64b5f6;
+            --winner-gold: #ffd700;
+            --lucky-green: #00e676; 
+            --border: #333333;         
+            --destroy-color: #ff4d4d;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        h1 { margin-bottom: 10px; font-weight: 700; color: #fff; }
+
+        /* 버튼 */
+        .btn {
+            background-color: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin-top: 20px;
+            z-index: 100;
+        }
+        .btn:hover {
+            background-color: var(--accent);
+            color: var(--bg-color);
+            box-shadow: 0 0 15px rgba(100, 181, 246, 0.4);
+        }
+
+        /* 시작 화면 */
+        #start-screen {
+            text-align: center;
+            padding: 40px;
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 500px;
+            width: 90%;
+            z-index: 10;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin: 30px 0;
+            display: inline-block;
+        }
+        
+        .file-input-wrapper input {
+            position: absolute;
+            left: 0; top: 0; width: 100%; height: 100%;
+            opacity: 0; cursor: pointer;
+        }
+
+        .info-text { color: var(--text-sub); font-size: 0.9rem; margin-top: 20px; }
+
+        /* 게임 화면 */
+        #game-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            perspective: 1200px;
+        }
+
+        .round-badge {
+            background-color: var(--accent);
+            color: var(--bg-color);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+            z-index: 50;
+            transition: opacity 0.3s;
+        }
+
+        .versus-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 60px;
+            width: 100%;
+            position: relative;
+        }
+
+        /* --- 카드 공통 스타일 --- */
+        .card {
+            position: relative;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s; 
+            transform-style: preserve-3d;
+            will-change: transform, opacity;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid var(--border);
+        }
+
+        /* 1. 일반 게임 카드 크기 */
+        .game-card-size {
+            width: 400px;
+            height: 540px;
+        }
+
+        /* 2. 우승자/부전승 카드 크기 */
+        .winner-card-size {
+            width: 500px;
+            height: 650px;
+            border: 2px solid var(--winner-gold);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+        }
+
+        /* 부전승 카드 테두리 색상 오버라이드 */
+        .bye-card-style {
+            border-color: var(--lucky-green);
+            box-shadow: 0 0 50px rgba(0, 230, 118, 0.3);
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            z-index: 10;
+            background: linear-gradient(105deg,
+                transparent 40%,
+                rgba(255, 219, 112, 0.8) 45%,
+                rgba(132, 50, 255 ,0.6) 50%,
+                transparent 54%);
+            mix-blend-mode: color-dodge;
+            filter: brightness(1.1) opacity(0);
+            background-size: 150% 150%;
+            background-position: 100%;
+            transition: all 0.1s;
+            pointer-events: none; 
+        }
+
+        .img-container {
+            width: 100%;
+            flex-grow: 1;
+            background-color: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            pointer-events: none;
+        }
+
+        .img-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .card-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-main);
+            text-align: center;
+            z-index: 5;
+            min-height: 40px;
+        }
+        
+        .winner-card-size .card-name {
+            font-size: 2rem;
+            color: var(--winner-gold);
+            margin-top: 10px;
+        }
+
+        .bye-card-style .card-name {
+            color: var(--lucky-green);
+        }
+
+        .vs {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #333;
+            font-style: italic;
+            transition: opacity 0.3s;
+        }
+
+        /* --- ✨ 애니메이션 정의 --- */
+
+        .pointer-none { pointer-events: none !important; }
+
+        @keyframes moveCenterFromLeft {
+            0% { transform: perspective(800px) rotateY(0deg); }
+            100% { 
+                transform: perspective(800px) translateX(230px) scale(1.15) rotateY(0deg); 
+                box-shadow: 0 0 50px var(--accent);
+                z-index: 100;
+                border-color: var(--accent);
+            }
+        }
+
+        @keyframes moveCenterFromRight {
+            0% { transform: perspective(800px) rotateY(0deg); }
+            100% { 
+                transform: perspective(800px) translateX(-230px) scale(1.15) rotateY(0deg); 
+                box-shadow: 0 0 50px var(--accent);
+                z-index: 100;
+                border-color: var(--accent);
+            }
+        }
+
+        @keyframes shatterFade {
+            0% { transform: perspective(800px) scale(1); opacity: 1; }
+            20% { transform: perspective(800px) scale(0.95) rotate(5deg); opacity: 0.8; filter: hue-rotate(90deg) blur(2px); }
+            40% { transform: perspective(800px) scale(0.9) rotate(-5deg); opacity: 0.6; filter: hue-rotate(180deg) blur(5px); }
+            60% { transform: perspective(800px) scale(0.85) skew(20deg); opacity: 0.4; border-color: var(--destroy-color); }
+            100% { transform: perspective(800px) scale(0) rotate(0deg); opacity: 0; }
+        }
+
+        .anim-win-left { animation: moveCenterFromLeft 0.8s forwards cubic-bezier(0.2, 0.8, 0.2, 1) !important; }
+        .anim-win-right { animation: moveCenterFromRight 0.8s forwards cubic-bezier(0.2, 0.8, 0.2, 1) !important; }
+        .anim-lose { animation: shatterFade 0.8s forwards ease-in !important; }
+
+        /* 결과/부전승 화면 */
+        #result-screen, #bye-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            perspective: 1200px;
+        }
+
+        .pop-up-animation { animation: popUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        @keyframes popUp {
+            0% { opacity: 0; transform: scale(0.5) rotateY(180deg); }
+            100% { opacity: 1; transform: scale(1) rotateY(0deg); }
+        }
+
+        @media (max-width: 768px) {
+            .versus-container { flex-direction: column; gap: 30px; }
+            .game-card-size { width: 90%; max-width: 320px; height: auto; }
+            .img-container { height: 280px; flex-grow: 0; }
+            .vs { margin: 10px 0; font-size: 2rem; }
+            .winner-card-size { width: 90%; max-width: 350px; height: auto; }
+
+            @keyframes moveCenterFromLeft { 100% { transform: scale(1.1); z-index: 100; } }
+            @keyframes moveCenterFromRight { 100% { transform: scale(1.1); z-index: 100; } }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen">
+        <h1>🏆 이상형 월드컵</h1>
+        <p style="color:var(--text-sub)">Full Version</p>
+
+        <div class="file-input-wrapper">
+            <button class="btn">📂 사진 폴더 선택하기</button>
+            <input type="file" id="folder-input" webkitdirectory multiple>
+        </div>
+
+        <div class="info-text">
+            * 모든 이미지 파일이 참여합니다.<br>
+            * 홀수일 경우 한 명은 부전승으로 올라갑니다.
+        </div>
+    </div>
+
+    <div id="game-screen">
+        <div id="round-badge" class="round-badge">16강</div>
+        
+        <div class="versus-container" id="vs-container">
+            <div class="card game-card-size" id="card-left" onclick="selectItem('left')">
+                <div class="overlay"></div> 
+                <div class="img-container">
+                    <img id="img-left" src="">
+                </div>
+                <div id="name-left" class="card-name">A</div>
+            </div>
+
+            <div class="vs" id="vs-text">VS</div>
+
+            <div class="card game-card-size" id="card-right" onclick="selectItem('right')">
+                <div class="overlay"></div>
+                <div class="img-container">
+                    <img id="img-right" src="">
+                </div>
+                <div id="name-right" class="card-name">B</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="bye-screen">
+        <h1 style="font-size: 2.5rem; color: var(--lucky-green); margin-bottom:20px; text-shadow: 0 0 10px rgba(0, 230, 118, 0.3);">🍀 운 좋은 부전승! 🍀</h1>
+        
+        <div class="card winner-card-size bye-card-style pop-up-animation" id="bye-card">
+            <div class="overlay"></div> 
+            <div class="img-container" style="height: 450px;">
+                <img id="bye-img" src="">
+            </div>
+            <div id="bye-name" class="card-name">이름</div>
+        </div>
+        <p style="margin-top:20px; color:#aaa;">짝이 맞지 않아 자동으로 다음 라운드에 진출합니다.</p>
+    </div>
+
+    <div id="result-screen">
+        <h1 style="font-size: 2.5rem; color: var(--winner-gold); margin-bottom:20px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);">🎉 최종 우승 🎉</h1>
+        
+        <div class="card winner-card-size pop-up-animation" id="winner-card">
+            <div class="overlay"></div> 
+            <div class="img-container" style="height: 450px;">
+                <img id="winner-img" src="">
+            </div>
+            <div id="winner-name" class="card-name">우승자 이름</div>
+        </div>
+
+        <button onclick="location.reload()" class="btn">다시 하기</button>
+    </div>
+
+    <script>
+        // --- 3D 효과 로직 ---
+        function attachGameCardEffect(cardId) {
+            const card = document.getElementById(cardId);
+            card.addEventListener('mousemove', function(e) {
+                if(card.classList.contains('pointer-none')) return;
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left; 
+                const y = e.clientY - rect.top;
+                const rotateY = -1/15 * (x - rect.width/2); 
+                const rotateX = 1/15 * (y - rect.height/2);
+                card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+            card.addEventListener('mouseout', function() {
+                if(!card.classList.contains('pointer-none')) {
+                    card.style.transform = 'perspective(800px) rotateY(0deg) rotateX(0deg)';
+                }
+            });
+        }
+
+        // 우승자 및 부전승 카드용 (큰 카드 + 홀로그램)
+        function attachSpecialCardEffect(cardId) {
+            const card = document.getElementById(cardId);
+            const overlay = card.querySelector('.overlay');
+            card.addEventListener('mousemove', function(e) {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left; 
+                const y = e.clientY - rect.top;
+                const rotateY = -1/20 * (x - rect.width/2);
+                const rotateX = 1/20 * (y - rect.height/2);
+                overlay.style.filter = `opacity(${x/rect.width + y/rect.height}) brightness(1.2)`;
+                overlay.style.backgroundPosition = `${x/5 + y/5}%`;
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+            card.addEventListener('mouseout', function() {
+                overlay.style.filter = 'opacity(0)';
+                card.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg)';
+            });
+        }
+
+        function initEffects() {
+            attachGameCardEffect('card-left');
+            attachGameCardEffect('card-right');
+            attachSpecialCardEffect('winner-card');
+            attachSpecialCardEffect('bye-card'); // 부전승 카드에도 효과 연결
+        }
+
+        // --- 게임 로직 ---
+        let candidates = [];
+        let nextRound = [];
+        let currentIdx = 0;
+        let isAnimating = false;
+
+        document.getElementById('folder-input').addEventListener('change', function(event) {
+            const files = event.target.files;
+            const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+
+            if (imageFiles.length < 2) {
+                alert("이미지가 너무 적습니다! (최소 2장 필요)");
+                return;
+            }
+
+            candidates = imageFiles.map(file => {
+                return {
+                    name: file.name.substring(0, file.name.lastIndexOf('.')) || file.name,
+                    img: URL.createObjectURL(file)
+                };
+            });
+            startGame();
+        });
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'flex';
+            initEffects();
+            candidates.sort(() => Math.random() - 0.5);
+            updateRoundInfo();
+            showMatch();
+        }
+
+        function updateRoundInfo() {
+            const badge = document.getElementById('round-badge');
+            if(candidates.length === 2) {
+                badge.innerText = "결승전";
+                badge.style.backgroundColor = "#ff4081";
+            } else {
+                badge.innerText = candidates.length + "강";
+                badge.style.backgroundColor = "var(--accent)";
+            }
+        }
+
+        function showMatch() {
+            const left = candidates[currentIdx];
+            const right = candidates[currentIdx + 1];
+
+            document.getElementById('img-left').src = left.img;
+            document.getElementById('name-left').innerText = left.name;
+            document.getElementById('img-right').src = right.img;
+            document.getElementById('name-right').innerText = right.name;
+
+            resetCardStyles();
+        }
+
+        function resetCardStyles() {
+            const leftCard = document.getElementById('card-left');
+            const rightCard = document.getElementById('card-right');
+            const vsText = document.getElementById('vs-text');
+
+            leftCard.classList.remove('anim-win-left', 'anim-lose', 'pointer-none');
+            rightCard.classList.remove('anim-win-right', 'anim-lose', 'pointer-none');
+            leftCard.style.transform = 'perspective(800px) rotateY(0deg) rotateX(0deg)';
+            rightCard.style.transform = 'perspective(800px) rotateY(0deg) rotateX(0deg)';
+            vsText.style.opacity = '1';
+        }
+
+        function selectItem(side) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            const leftCard = document.getElementById('card-left');
+            const rightCard = document.getElementById('card-right');
+            const vsText = document.getElementById('vs-text');
+
+            leftCard.classList.add('pointer-none');
+            rightCard.classList.add('pointer-none');
+            vsText.style.opacity = '0';
+
+            if (side === 'left') {
+                leftCard.classList.add('anim-win-left');   
+                rightCard.classList.add('anim-lose');      
+                nextRound.push(candidates[currentIdx]);
+            } else {
+                rightCard.classList.add('anim-win-right'); 
+                leftCard.classList.add('anim-lose');       
+                nextRound.push(candidates[currentIdx + 1]);
+            }
+
+            setTimeout(() => {
+                currentIdx += 2;
+
+                if (currentIdx >= candidates.length - 1) {
+                    
+                    if (currentIdx === candidates.length - 1) {
+                        handleByeRound(candidates[currentIdx]); 
+                        return; 
+                    }
+
+                    goToNextRound();
+                } else {
+                    showMatch();
+                    isAnimating = false;
+                }
+            }, 1200);
+        }
+
+        // 부전승 처리 함수
+        function handleByeRound(luckyCandidate) {
+            document.getElementById('game-screen').style.display = 'none';
+            const byeScreen = document.getElementById('bye-screen');
+            byeScreen.style.display = 'flex';
+
+            document.getElementById('bye-img').src = luckyCandidate.img;
+            document.getElementById('bye-name').innerText = luckyCandidate.name;
+
+            nextRound.push(luckyCandidate);
+
+            // ⏱️ 시간을 3초(3000ms)로 늘렸습니다!
+            setTimeout(() => {
+                byeScreen.style.display = 'none';
+                document.getElementById('game-screen').style.display = 'flex';
+                goToNextRound();
+            }, 3000); 
+        }
+
+        function goToNextRound() {
+            candidates = [...nextRound];
+            nextRound = [];
+            currentIdx = 0;
+
+            if (candidates.length === 1) {
+                showWinner();
+                return;
+            }
+            
+            candidates.sort(() => Math.random() - 0.5);
+            updateRoundInfo();
+            showMatch();
+            isAnimating = false; 
+        }
+
+        function showWinner() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'flex'; 
+
+            const winner = candidates[0];
+            document.getElementById('winner-img').src = winner.img;
+            document.getElementById('winner-name').innerText = winner.name;
+        }
+    </script>
+</body>
+</html>
