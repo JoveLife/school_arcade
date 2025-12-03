@@ -5,192 +5,95 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Web Projects Arcade</title>
     <style>
-        /* --- [기본 테마 설정] --- */
         :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-main: #e0e0e0;
-            --accent: #64b5f6;
+            --bg-color: #121212; --card-bg: #1e1e1e;
+            --text-main: #e0e0e0; --accent: #64b5f6;
             --hover-glow: rgba(100, 181, 246, 0.4);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--bg-color); color: var(--text-main);
             font-family: 'Pretendard', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
         }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 50px;
-            text-shadow: 0 0 10px var(--accent);
-            font-weight: 700;
-        }
-
+        h1 { font-size: 2.5rem; margin-bottom: 50px; text-shadow: 0 0 10px var(--accent); font-weight: 700; }
         .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            width: 100%;
-            max-width: 1200px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px; width: 100%; max-width: 1200px;
         }
-
-        /* --- [프로젝트 카드 시스템] --- */
         .project-card {
-            /* ✨ [핵심] 기본 설정값 (개별 카드에서 style로 덮어쓰기 가능) */
-            --img-size: 100%;        /* 이미지 크기 */
-            --img-fit: cover;        /* cover: 꽉 채우기(잘림), contain: 다 보여주기(안 잘림) */
-            --thumb-bg: #000;        /* 썸네일 배경색 */
-            --img-radius: 0px;       /* 이미지 둥글기 */
-
-            background-color: var(--card-bg);
-            border-radius: 15px;
-            overflow: hidden;
-            border: 1px solid #333;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            cursor: pointer;
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            position: relative;
+            --img-size: 100%; --img-fit: cover; --thumb-bg: #000; --img-radius: 0px;
+            background-color: var(--card-bg); border-radius: 15px; overflow: hidden;
+            border: 1px solid #333; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer; text-decoration: none; color: inherit;
+            display: flex; flex-direction: column; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-
         .project-card:hover {
             transform: translateY(-10px) scale(1.03);
             box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 10px var(--hover-glow);
-            border-color: var(--accent);
-            z-index: 10;
+            border-color: var(--accent); z-index: 10;
         }
-
-        /* 썸네일 영역 */
         .thumb-container {
-            width: 100%;
-            height: 200px;
-            border-bottom: 1px solid #333;
-            background-color: var(--thumb-bg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            width: 100%; height: 200px; border-bottom: 1px solid #333;
+            background-color: var(--thumb-bg); display: flex; justify-content: center; align-items: center; overflow: hidden;
         }
-
-        /* 썸네일 이미지 */
         .thumb-container img {
-            width: var(--img-size);
-            height: var(--img-size);
-            object-fit: var(--img-fit); /* 여기서 변수를 받아 fit을 결정함 */
-            border-radius: var(--img-radius);
-            transition: transform 0.5s;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+            width: var(--img-size); height: var(--img-size);
+            object-fit: var(--img-fit); border-radius: var(--img-radius);
+            transition: transform 0.5s; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
         }
-
-        .project-card:hover .thumb-container img {
-            transform: scale(1.1); 
-        }
-
-        /* 텍스트 정보 */
-        .info {
-            padding: 20px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .info h2 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            color: #fff;
-        }
-
-        .info p {
-            font-size: 0.9rem;
-            color: #aaa;
-            line-height: 1.4;
-            margin-bottom: 15px;
-            flex-grow: 1;
-            word-break: keep-all; 
-        }
-
+        .project-card:hover .thumb-container img { transform: scale(1.1); }
+        .info { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+        .info h2 { font-size: 1.5rem; margin-bottom: 10px; color: #fff; }
+        .info p { font-size: 0.9rem; color: #aaa; line-height: 1.4; margin-bottom: 15px; flex-grow: 1; word-break: keep-all; }
         .tags { margin-top: auto; }
-
         .tag {
-            display: inline-block;
-            padding: 5px 12px;
-            font-size: 0.8rem;
-            border-radius: 20px;
-            border: 1px solid var(--accent);
-            color: var(--accent);
-            background: rgba(100, 181, 246, 0.1);
-            margin-right: 5px;
+            display: inline-block; padding: 5px 12px; font-size: 0.8rem; border-radius: 20px;
+            border: 1px solid var(--accent); color: var(--accent);
+            background: rgba(100, 181, 246, 0.1); margin-right: 5px;
         }
     </style>
 </head>
 <body>
-
     <h1>🕹️ Project Arcade</h1>
-
     <div class="grid-container">
         
         <a href="projects/worldcup/index.html" class="project-card" 
            style="--img-size: 85%; --img-radius: 12px; --thumb-bg: #121212; --img-fit: contain;">
-            
             <div class="thumb-container">
-                <img src="projects/worldcup/thumb.png" alt="월드컵 미리보기" 
-                     onerror="this.parentElement.innerHTML='<span style=\'color:#555\'>이미지 없음</span>'">
+                <img src="projects/worldcup/thumb.png" alt="월드컵" onerror="this.style.display='none'">
             </div>
-            
             <div class="info">
                 <h2>이상형 월드컵</h2>
-                <p>나만의 사진 폴더로 진행하는 토너먼트 게임. 3D 홀로그램 UI와 부전승 시스템이 적용되었습니다.</p>
-                <div class="tags">
-                    <span class="tag">Game</span>
-                    <span class="tag">HTML/JS</span>
-                </div>
+                <p>나만의 사진으로 진행하는 토너먼트. 3D 홀로그램 효과와 부전승 시스템이 특징입니다.</p>
+                <div class="tags"><span class="tag">Game</span></div>
             </div>
         </a>
 
         <a href="projects/memory/index.html" class="project-card" 
-           style="--img-size: 90%; --img-radius: 8px; --thumb-bg: #1a1a1a; --img-fit: contain;">
-            
+           style="--img-size: 80%; --img-radius: 8px; --thumb-bg: #1a1a1a; --img-fit: contain;">
             <div class="thumb-container">
-                <img src="projects/memory/thumb.png" alt="메모리 게임 미리보기" 
-                     onerror="this.parentElement.innerHTML='<span style=\'color:#555\'>이미지 없음</span>'">
+                <img src="projects/memory/thumb.png" alt="메모리" onerror="this.style.display='none'">
             </div>
-            
             <div class="info">
                 <h2>네온 메모리 링크</h2>
-                <p>자동 카드 생성 및 수업용 '짝짓기 모드'를 지원하는 기억력 게임. 맞추면 빛나는 네온 효과가 특징입니다.</p>
-                <div class="tags">
-                    <span class="tag">Game</span>
-                    <span class="tag">Education</span>
-                    <span class="tag">JS</span>
-                </div>
+                <p>자동 카드 생성 및 수업용 '짝짓기 모드'를 지원하는 기억력 게임입니다.</p>
+                <div class="tags"><span class="tag">Edu</span><span class="tag">Game</span></div>
             </div>
         </a>
 
-         <a href="#" class="project-card" style="opacity: 0.5; pointer-events: none;">
+        <a href="projects/random/index.html" class="project-card" 
+           style="--img-size: 70%; --img-radius: 50%; --thumb-bg: #151515; --img-fit: contain;">
             <div class="thumb-container">
-                <img src="https://via.placeholder.com/400x250/1e1e1e/64b5f6/?text=Planning" alt="준비중">
+                <img src="projects/random/thumb.png" alt="랜덤존" onerror="this.parentElement.innerHTML='<span style=\'font-size:3rem\'>🎲</span>'">
             </div>
             <div class="info">
-                <h2>Coming Soon</h2>
-                <p>다음에 추가될 멋진 프로젝트를 기대해주세요.</p>
-                <div class="tags">
-                    <span class="tag">Plan</span>
-                </div>
+                <h2>랜덤 아케이드 존</h2>
+                <p>룰렛, 뽑기, 핀볼 등 다양한 추첨 도구를 모아둔 공간입니다. 상황에 맞춰 골라 쓰세요.</p>
+                <div class="tags"><span class="tag">Tools</span><span class="tag">Collection</span></div>
             </div>
         </a>
 
     </div>
-
 </body>
 </html>

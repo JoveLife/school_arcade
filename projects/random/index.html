@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Arcade Zone</title>
+    <style>
+        /* 메인 페이지와 동일한 스타일 (통일감 유지) */
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --accent: #d500f9; /* 랜덤 존은 보라색 테마 */
+            --hover-glow: rgba(213, 0, 249, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Pretendard', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--accent);
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #aaa; margin-bottom: 50px; font-size: 1rem;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .project-card {
+            --img-size: 80%; --img-fit: contain; --thumb-bg: #151515; --img-radius: 50%;
+            
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid #333;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 10px var(--hover-glow);
+            border-color: var(--accent);
+        }
+
+        .thumb-container {
+            width: 100%; height: 180px;
+            border-bottom: 1px solid #333;
+            background-color: var(--thumb-bg);
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .thumb-container img {
+            width: var(--img-size); height: var(--img-size);
+            object-fit: var(--img-fit); border-radius: var(--img-radius);
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+        }
+
+        .info { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+        .info h2 { font-size: 1.5rem; margin-bottom: 10px; color: #fff; }
+        .info p { font-size: 0.9rem; color: #aaa; line-height: 1.4; margin-bottom: 15px; }
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px;
+            color: #777; text-decoration: none; font-weight: bold;
+            display: flex; align-items: center; gap: 5px;
+            transition: 0.3s;
+        }
+        .back-btn:hover { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <a href="../../index.html" class="back-btn">◀ 메인으로</a>
+
+    <h1>🎲 Random Zone</h1>
+    <p class="subtitle">수업에 필요한 도구를 선택하세요</p>
+
+    <div class="grid-container">
+        
+        <a href="./roulette/index.html" class="project-card">
+            <div class="thumb-container">
+                <div style="font-size:3rem;">🎡</div>
+            </div>
+            <div class="info">
+                <h2>네온 룰렛</h2>
+                <p>가장 클래식한 회전판. 청소 당번이나 발표자를 뽑을 때 사용하세요.</p>
+            </div>
+        </a>
+
+        <a href="./gacha/index.html" class="project-card">
+            <div class="thumb-container">
+                <div style="font-size:3rem;">💊</div>
+            </div>
+            <div class="info">
+                <h2>미스터리 뽑기</h2>
+                <p>캡슐이 흔들리다 짠! 하고 나타납니다. 간식 추첨에 추천합니다.</p>
+            </div>
+        </a>
+
+        <a href="./pinball/index.html" class="project-card">
+            <div class="thumb-container">
+                <div style="font-size:3rem;">🎱</div>
+            </div>
+            <div class="info">
+                <h2>바운스 핀볼</h2>
+                <p>공이 통통 튀어 다니다가 멈춘 곳이 당첨됩니다.</p>
+            </div>
+        </a>
+
+    </div>
+
+</body>
+</html>

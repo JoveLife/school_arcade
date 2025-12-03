@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미스터리 가챠</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --blue: #2979ff;
+            --text-main: #e0e0e0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Pretendard', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        h1 {
+            color: var(--blue);
+            text-shadow: 0 0 10px var(--blue);
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        /* --- 가챠 머신 --- */
+        .machine-wrapper {
+            position: relative;
+            width: 400px;
+            height: 520px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .glass-globe {
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            border: 4px solid var(--blue);
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), rgba(0,0,0,0.8));
+            box-shadow: 0 0 30px rgba(41, 121, 255, 0.3), inset 0 0 20px rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        canvas { display: block; border-radius: 50%; }
+
+        .base {
+            width: 300px;
+            height: 120px;
+            background: #222;
+            border: 2px solid #444;
+            border-radius: 0 0 20px 20px;
+            margin-top: -40px;
+            position: relative;
+            z-index: 5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .chute-marker {
+            width: 80px;
+            height: 40px;
+            background: #000;
+            border-radius: 20px;
+            border: 2px solid #333;
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.8);
+        }
+
+        /* --- 컨트롤 패널 --- */
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 20;
+        }
+
+        .btn {
+            padding: 12px 35px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            background: var(--blue);
+            color: #fff;
+            border: none;
+            font-weight: bold;
+            transition: 0.2s;
+            box-shadow: 0 0 15px rgba(41, 121, 255, 0.4);
+        }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 0 25px var(--blue); }
+        .btn:disabled { background: #555; color: #aaa; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .btn-sub {
+            background: transparent;
+            border: 1px solid #777;
+            color: #aaa;
+            font-size: 1rem;
+            padding: 10px 20px;
+        }
+        .btn-sub:hover { border-color: #fff; color: #fff; }
+
+        /* --- 결과 연출 --- */
+        #result-ball {
+            position: fixed; 
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: red;
+            
+            display: none; 
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            
+            z-index: 9999;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.5), 0 0 20px rgba(0,0,0,0.5);
+            
+            transition: 
+                top 1.5s cubic-bezier(0.25, 1, 0.5, 1),
+                left 1.5s cubic-bezier(0.25, 1, 0.5, 1),
+                width 1.5s cubic-bezier(0.25, 1, 0.5, 1),
+                height 1.5s cubic-bezier(0.25, 1, 0.5, 1),
+                transform 1.5s ease-out;
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+
+        #result-ball.revealed {
+            top: 50% !important;
+            left: 50% !important;
+            width: 85vmin !important; 
+            height: 85vmin !important;
+            transform: translate(-50%, -50%) rotate(720deg);
+            cursor: pointer;
+            box-shadow: 0 0 100px rgba(255, 255, 255, 0.5), inset -30px -30px 60px rgba(0,0,0,0.3);
+        }
+
+        #result-ball span {
+            color: #fff;
+            font-weight: 900;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            width: 80%;
+            line-height: 1.1;
+            word-break: keep-all; 
+            opacity: 0;
+            transition: opacity 0.5s 1.2s;
+        }
+        #result-ball.revealed span { opacity: 1; }
+
+        /* --- [핵심 수정] 재시작 버튼 오버레이 --- */
+        #restart-overlay {
+            position: absolute;
+            bottom: 5%;
+            width: 100%;
+            display: none; /* JS에서 flex로 변경 */
+            justify-content: center;
+            
+            /* 공(9999)보다 높아야 클릭 가능 */
+            z-index: 10001; 
+            
+            animation: fadeIn 1s 1s forwards; /* 공이 커진 뒤 천천히 등장 */
+            opacity: 0;
+        }
+        
+        #restart-overlay .btn {
+            background: #fff;
+            color: var(--blue);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            border: 2px solid var(--blue);
+        }
+        #restart-overlay .btn:hover {
+            background: var(--blue);
+            color: #fff;
+        }
+
+        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+        /* --- 모달 --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none; align-items: center; justify-content: center;
+            z-index: 10000; backdrop-filter: blur(5px);
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--card-bg); padding: 30px;
+            border-radius: 20px; border: 1px solid #444;
+            text-align: center; width: 90%; max-width: 500px;
+        }
+        textarea {
+            width: 100%; height: 200px;
+            background: #111; color: #fff; padding: 15px;
+            border: 1px solid #444; border-radius: 10px; resize: none; margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>MYSTERY GACHA</h1>
+
+    <div class="machine-wrapper">
+        <div class="glass-globe">
+            <canvas id="canvas" width="400" height="400"></canvas>
+        </div>
+        <div class="base">
+            <div class="chute-marker" id="chute-point"></div>
+        </div>
+    </div>
+
+    <div id="result-ball" onclick="resetGacha()">
+        <span id="result-text">결과</span>
+    </div>
+
+    <div class="controls" id="controls">
+        <button class="btn" id="draw-btn" onclick="startDrawSequence()">DRAW!</button>
+        <button class="btn btn-sub" onclick="openEditModal()">📝 내용 설정</button>
+    </div>
+
+    <div id="restart-overlay">
+        <button class="btn" onclick="resetGacha()">🔄 다시 뽑기</button>
+    </div>
+
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <h2>뽑기 내용 설정</h2>
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom:10px;">이름*개수 형식 가능</p>
+            <textarea id="list-input" placeholder="당첨&#10;꽝*3&#10;보너스"></textarea>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button class="btn" onclick="applySettings()">적용하기</button>
+                <button class="btn btn-sub" onclick="closeModal()">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let items = ["당첨", "꽝", "꽝", "꽝", "보너스", "한번더"];
+        let balls = [];
+        let animationId;
+        
+        let physicsState = 'idle'; // idle, shaking, extracted
+        let friction = 0.95;
+
+        class Ball {
+            constructor(text) {
+                this.text = text;
+                this.x = 200 + (Math.random() - 0.5) * 100;
+                this.y = 200 + (Math.random() - 0.5) * 100;
+                this.r = 18 + Math.random() * 5;
+                
+                this.dx = (Math.random() - 0.5) * 8;
+                this.dy = (Math.random() - 0.5) * 8;
+                
+                this.color = `hsl(${Math.random() * 360}, 80%, 60%)`;
+                this.isFalling = false;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.fillStyle = "rgba(255,255,255,0.3)";
+                ctx.beginPath();
+                ctx.arc(this.x - this.r/3, this.y - this.r/3, this.r/4, 0, Math.PI*2);
+                ctx.fill();
+                
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 16px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("?", this.x, this.y);
+            }
+
+            update() {
+                // 1. 낙하 모드
+                if (this.isFalling) {
+                    this.dy += 0.5; // 중력
+                    const centerX = 200;
+                    this.dx += (centerX - this.x) * 0.05; // 구심력
+                    this.dx *= 0.95;
+                    this.x += this.dx;
+                    this.y += this.dy;
+                    return; 
+                }
+
+                // 2. 부유 모드 (에어볼)
+                // 중앙으로 모이는 힘 + 랜덤 바람
+                const centerX = 200;
+                const centerY = 200;
+                
+                // 약한 구심력 (너무 퍼지지 않게)
+                this.dx += (centerX - this.x) * 0.0005;
+                this.dy += (centerY - this.y) * 0.0005;
+
+                // 랜덤 바람
+                this.dx += (Math.random() - 0.5) * 0.8;
+                this.dy += (Math.random() - 0.5) * 0.8;
+
+                // 속도 제한
+                const maxSpeed = 10;
+                this.dx = Math.max(Math.min(this.dx, maxSpeed), -maxSpeed);
+                this.dy = Math.max(Math.min(this.dy, maxSpeed), -maxSpeed);
+
+                this.x += this.dx;
+                this.y += this.dy;
+
+                // 3. 벽 충돌
+                const dist = Math.sqrt((this.x - 200)**2 + (this.y - 200)**2);
+                if (dist + this.r > 200) {
+                    const angle = Math.atan2(this.y - 200, this.x - 200);
+                    this.x = 200 + Math.cos(angle) * (200 - this.r - 1);
+                    this.y = 200 + Math.sin(angle) * (200 - this.r - 1);
+                    this.dx = -this.dx * 0.8;
+                    this.dy = -this.dy * 0.8;
+                }
+            }
+        }
+
+        // --- 초기화 ---
+        function init() {
+            balls = [];
+            physicsState = 'idle';
+            items.forEach(item => {
+                balls.push(new Ball(item));
+            });
+            animate();
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, 400, 400);
+            
+            balls.forEach(ball => {
+                ball.update();
+                ball.draw();
+            });
+
+            // 당첨공 탈출 체크
+            const winner = balls.find(b => b.isFalling);
+            if (winner && winner.y > 450) {
+                cancelAnimationFrame(animationId);
+                triggerReveal(winner);
+                return;
+            }
+
+            if(balls.length > 0) animationId = requestAnimationFrame(animate);
+        }
+
+        // --- 시퀀스 ---
+        function startDrawSequence() {
+            if(physicsState !== 'idle' || balls.length === 0) return;
+            document.getElementById('draw-btn').disabled = true;
+            physicsState = 'shaking';
+
+            // 1. 와류 (속도 증가)
+            balls.forEach(b => {
+                b.dx = (Math.random()-0.5) * 25;
+                b.dy = (Math.random()-0.5) * 25;
+            });
+
+            // 2. 당첨 선정
+            setTimeout(() => {
+                const idx = Math.floor(Math.random() * balls.length);
+                const winner = balls[idx];
+                winner.isFalling = true; // 낙하 시작
+                winner.dx = 0; 
+                winner.dy = 2; 
+            }, 2000); 
+        }
+
+        function triggerReveal(winnerBall) {
+            ctx.clearRect(0, 0, 400, 400);
+            balls.forEach(b => { if(b !== winnerBall) b.draw(); });
+
+            const resultBall = document.getElementById('result-ball');
+            const resultText = document.getElementById('result-text');
+            const chute = document.getElementById('chute-point');
+            const rect = chute.getBoundingClientRect();
+            
+            resultText.innerText = winnerBall.text;
+
+            // 폰트 크기 계산
+            const len = winnerBall.text.length;
+            let fontSize;
+            if (len <= 2) fontSize = "25vmin";       
+            else if (len <= 4) fontSize = "15vmin";  
+            else if (len <= 7) fontSize = "10vmin";  
+            else fontSize = "6vmin";                 
+
+            resultText.style.fontSize = fontSize;
+
+            resultBall.style.top = (rect.top + rect.height/2) + 'px';
+            resultBall.style.left = (rect.left + rect.width/2) + 'px';
+            resultBall.style.width = '60px';
+            resultBall.style.height = '60px';
+            resultBall.style.background = winnerBall.color;
+            resultBall.style.display = 'flex'; 
+
+            setTimeout(() => {
+                resultBall.classList.add('revealed');
+                document.getElementById('controls').style.display = 'none';
+                document.getElementById('restart-overlay').style.display = 'flex';
+            }, 50);
+        }
+
+        function resetGacha() {
+            document.getElementById('draw-btn').disabled = false;
+            document.getElementById('controls').style.display = 'flex';
+            document.getElementById('restart-overlay').style.display = 'none';
+
+            const resultBall = document.getElementById('result-ball');
+            resultBall.classList.remove('revealed');
+            resultBall.style.display = 'none';
+            resultBall.style.transform = 'translate(-50%, -50%) rotate(0deg)';
+
+            init();
+        }
+
+        function openEditModal() {
+            document.getElementById('list-input').value = items.join('\n');
+            document.getElementById('edit-modal').classList.add('active');
+        }
+        function closeModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+        }
+
+        function applySettings() {
+            const raw = document.getElementById('list-input').value;
+            const lines = raw.split('\n');
+            let newItems = [];
+            lines.forEach(line => {
+                line = line.trim();
+                if(!line) return;
+                if(line.includes('*')) {
+                    const parts = line.split('*');
+                    const name = parts[0].trim();
+                    let count = parseInt(parts[1]);
+                    if(isNaN(count) || count < 1) count = 1;
+                    for(let i=0; i<count; i++) newItems.push(name);
+                } else {
+                    newItems.push(line);
+                }
+            });
+            if(newItems.length < 1) return alert("최소 1개 이상 입력하세요.");
+            items = newItems;
+            closeModal();
+            init(); 
+        }
+
+        init();
+    </script>
+</body>
+</html>

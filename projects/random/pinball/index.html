@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>멀티 핀볼 추첨</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --pink: #d500f9;
+            --text-main: #e0e0e0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Pretendard', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        h1 {
+            color: var(--pink);
+            text-shadow: 0 0 10px var(--pink);
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        /* --- 메인 레이아웃 --- */
+        .game-area {
+            display: flex;
+            gap: 20px;
+            align-items: stretch;
+            height: 500px;
+        }
+
+        .canvas-container {
+            position: relative;
+            box-shadow: 0 0 30px rgba(213, 0, 249, 0.2);
+            border-radius: 10px;
+            height: 100%;
+        }
+
+        canvas {
+            border: 2px solid var(--pink);
+            border-radius: 10px;
+            background: #000;
+            display: block;
+            height: 100%;
+        }
+
+        /* 사이드바 */
+        .sidebar {
+            width: 220px;
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            background: #2a002a;
+            border-bottom: 1px solid var(--pink);
+            color: var(--pink);
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .sidebar-content::-webkit-scrollbar { width: 6px; }
+        .sidebar-content::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+
+        .participant-tag {
+            background: #333;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 3px solid var(--pink);
+            transition: transform 0.2s;
+        }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pink); }
+
+        /* 컨트롤 패널 */
+        .controls {
+            margin-top: 20px;
+            min-height: 60px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            animation: fadeIn 0.3s;
+        }
+        
+        .hidden { display: none !important; }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            background: var(--pink);
+            color: #fff;
+            border: none;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .btn:hover { box-shadow: 0 0 20px var(--pink); transform: scale(1.05); }
+        .btn:disabled { background: #555; color: #aaa; cursor: not-allowed; box-shadow: none; transform: none; }
+        
+        .btn-sub {
+            background: transparent;
+            border: 1px solid #777;
+            color: #aaa;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .btn-sub:hover { border-color: #fff; color: #fff; }
+
+        .btn-result { background: #00e676; color: #000; }
+        .btn-result:hover { box-shadow: 0 0 20px #00e676; }
+
+        /* 모달 스타일 */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none; align-items: center; justify-content: center;
+            z-index: 100; backdrop-filter: blur(5px);
+        }
+        .modal.active { display: flex; animation: fadeIn 0.3s; }
+        .modal-content {
+            background: var(--card-bg); padding: 30px;
+            border-radius: 20px; border: 1px solid #444;
+            text-align: center; width: 90%; max-width: 600px;
+            display: flex; flex-direction: column; gap: 15px;
+            max-height: 80vh;
+        }
+
+        .input-area { display: flex; gap: 20px; text-align: left; }
+        .input-group { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .input-group label { font-size: 0.9rem; color: var(--pink); font-weight: bold; }
+        .input-hint { font-size: 0.75rem; color: #777; margin-bottom: 5px; }
+        
+        textarea {
+            width: 100%; height: 200px;
+            background: #111; color: #fff;
+            padding: 10px; border: 1px solid #444; border-radius: 10px;
+            resize: none; font-size: 0.9rem;
+        }
+        textarea:focus { outline: none; border-color: var(--pink); }
+
+        /* --- [수정된 부분] 결과 리스트 스타일 --- */
+        .result-group {
+            background: #252525;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            text-align: left;
+            border: 1px solid #333;
+        }
+        .result-title {
+            color: var(--pink);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+            display: flex; justify-content: space-between;
+        }
+        .result-count { font-size: 0.8rem; color: #aaa; background: #333; padding: 2px 6px; border-radius: 10px; }
+        
+        .result-names {
+            display: flex; flex-wrap: wrap; gap: 5px;
+        }
+        .name-badge {
+            background: #444; color: #fff;
+            padding: 4px 8px; border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } 100% { transform: translateX(0); } }
+        .shake { animation: shake 0.3s; }
+    </style>
+</head>
+<body>
+
+    <h1>BOUNCE PINBALL</h1>
+    
+    <div class="game-area">
+        <div class="canvas-container">
+            <canvas id="canvas" width="800" height="500"></canvas>
+        </div>
+
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                참가자 목록 (<span id="count-display">0</span>명)
+            </div>
+            <div class="sidebar-content" id="sidebar-list">
+                </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div id="setup-controls" class="btn-group">
+            <button class="btn" id="shoot-btn" onclick="shootBalls()">SHOOT!</button>
+            <button class="btn btn-sub" id="shuffle-btn" onclick="shuffleGame()">🔀 섞기</button>
+            <button class="btn btn-sub" onclick="openEditModal()">📝 설정</button>
+        </div>
+
+        <div id="result-controls" class="btn-group hidden">
+            <button class="btn btn-result" onclick="showFinalResults()">🏆 결과 보기</button>
+            <button class="btn btn-sub" onclick="resetGame()">🔄 재시작</button>
+        </div>
+    </div>
+
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <h2>설정 변경</h2>
+            <div class="input-area">
+                <div class="input-group">
+                    <label>🔴 튕길 공 (학생 이름)</label>
+                    <div class="input-hint">Tip: 이름*2 입력 시 2개 생성</div>
+                    <textarea id="balls-input" placeholder="김철수&#10;이영희*2&#10;박민수"></textarea>
+                    <button class="btn btn-sub" style="font-size:0.8rem; padding:5px; justify-content:center;" onclick="autoNum()">1~N번 자동입력</button>
+                </div>
+                <div class="input-group">
+                    <label>🏁 바닥 판 (벌칙/상품)</label>
+                    <div class="input-hint">Tip: 청소*3 입력 시 칸 3개 생성</div>
+                    <textarea id="targets-input" placeholder="청소*2&#10;발표&#10;간식&#10;통과"></textarea>
+                </div>
+            </div>
+            <button class="btn" onclick="applySettings()">적용하기</button>
+            <button class="btn btn-sub" style="border:none; justify-content:center;" onclick="closeModal('edit-modal')">닫기</button>
+        </div>
+    </div>
+
+    <div id="result-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2 style="color:var(--pink)">🎉 결과 발표 🎉</h2>
+            <div id="result-container" style="max-height: 500px; overflow-y: auto; width:100%;">
+                </div>
+            <button class="btn" onclick="closeModal('result-modal')" style="margin-top:15px;">확인</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 원본 데이터
+        let ballNames = ["1번", "2번", "3번", "4번", "5번"];
+        let targetNames = ["청소", "발표", "간식", "노래", "면제", "당첨"];
+        
+        // 게임 상태
+        let balls = [];
+        let isRunning = false;
+        let animationId;
+        let frameCount = 0;
+
+        let gridLayout = {
+            cols: 0, rows: 0, w: 0, h: 0, cells: [] 
+        };
+
+        function calculateGrid(shuffle = false) {
+            let cols = 3; 
+            if(targetNames.length > 6) cols = 4;
+            if(targetNames.length > 12) cols = 5;
+            
+            let rows = Math.ceil(targetNames.length / cols);
+            let w = canvas.width / cols;
+            let h = canvas.height / rows;
+            let totalCells = rows * cols;
+
+            let cells = [...targetNames];
+            while(cells.length < totalCells) {
+                cells.push(null); // null = SPEED UP Zone
+            }
+
+            if(shuffle) {
+                cells.sort(() => Math.random() - 0.5);
+            }
+
+            gridLayout = { cols, rows, w, h, cells };
+        }
+
+        function initGame(shuffle = false) {
+            calculateGrid(shuffle);
+
+            balls = ballNames.map((name, i) => {
+                return {
+                    name: name,
+                    x: canvas.width / 2 + (Math.random() - 0.5) * 40, 
+                    y: canvas.height / 2 + (Math.random() - 0.5) * 40,
+                    dx: 0, 
+                    dy: 0,
+                    r: 12,
+                    color: `hsl(${Math.random() * 360}, 80%, 60%)`,
+                    stopped: false
+                };
+            });
+
+            drawFrame();
+            updateSidebar();
+
+            document.getElementById('setup-controls').classList.remove('hidden');
+            document.getElementById('result-controls').classList.add('hidden');
+            document.getElementById('shoot-btn').disabled = false;
+        }
+
+        function resetGame() {
+            initGame(false); 
+        }
+
+        function shuffleGame() {
+            if(isRunning) return;
+            ballNames.sort(() => Math.random() - 0.5);
+            // 섞기 버튼 누르면 그리드도 섞이도록 initGame에 true 전달
+            initGame(true);
+            
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.add('shake');
+            setTimeout(() => sidebar.classList.remove('shake'), 300);
+        }
+
+        function drawFrame() {
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            drawGridLines(false);
+            balls.forEach(drawBall);
+        }
+
+        function drawBall(ball) {
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+            ctx.fillStyle = ball.color;
+            ctx.fill();
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 10px Pretendard";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(ball.name.substring(0,3), ball.x, ball.y);
+        }
+
+        function shootBalls() {
+            if(isRunning) return;
+            isRunning = true;
+            document.getElementById('shoot-btn').disabled = true;
+            document.getElementById('shuffle-btn').disabled = true;
+
+            balls.forEach(ball => {
+                ball.dx = (Math.random() - 0.5) * 20; 
+                ball.dy = (Math.random() - 0.5) * 20;
+            });
+            animate();
+        }
+
+        function animate() {
+            frameCount++;
+            ctx.fillStyle = "rgba(0,0,0,0.15)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.globalAlpha = 0.3;
+            drawGridLines(true);
+            ctx.restore();
+
+            let movingCount = 0;
+
+            balls.forEach(ball => {
+                if(!ball.stopped) {
+                    ball.x += ball.dx;
+                    ball.y += ball.dy;
+
+                    if(ball.x + ball.r > canvas.width) {
+                        ball.x = canvas.width - ball.r;
+                        ball.dx = -(Math.random() * 10 + 5); 
+                        ball.dy = (Math.random() - 0.5) * 20;
+                    } else if(ball.x - ball.r < 0) {
+                        ball.x = ball.r;
+                        ball.dx = (Math.random() * 10 + 5);
+                        ball.dy = (Math.random() - 0.5) * 20;
+                    }
+
+                    if(ball.y + ball.r > canvas.height) {
+                        ball.y = canvas.height - ball.r;
+                        ball.dy = -(Math.random() * 10 + 5);
+                        ball.dx = (Math.random() - 0.5) * 20;
+                    } else if(ball.y - ball.r < 0) {
+                        ball.y = ball.r;
+                        ball.dy = (Math.random() * 10 + 5);
+                        ball.dx = (Math.random() - 0.5) * 20;
+                    }
+
+                    ball.dx *= 0.98;
+                    ball.dy *= 0.98;
+
+                    if(Math.abs(ball.dx) < 0.3 && Math.abs(ball.dy) < 0.3) {
+                        let col = Math.floor(ball.x / gridLayout.w);
+                        let row = Math.floor(ball.y / gridLayout.h);
+                        
+                        if(col < 0) col = 0; if(col >= gridLayout.cols) col = gridLayout.cols - 1;
+                        if(row < 0) row = 0; if(row >= gridLayout.rows) row = gridLayout.rows - 1;
+                        
+                        let index = row * gridLayout.cols + col;
+                        let cellContent = gridLayout.cells[index];
+
+                        if(cellContent === null) {
+                            ball.dx = (Math.random() - 0.5) * 25; 
+                            ball.dy = -(Math.random() * 15 + 5);
+                        } else {
+                            ball.stopped = true;
+                        }
+                    }
+                    if(!ball.stopped) movingCount++;
+                }
+                drawBall(ball);
+            });
+
+            if(movingCount > 0) {
+                animationId = requestAnimationFrame(animate);
+            } else {
+                isRunning = false;
+                document.getElementById('setup-controls').classList.add('hidden');
+                document.getElementById('result-controls').classList.remove('hidden');
+                document.getElementById('shuffle-btn').disabled = false;
+            }
+        }
+
+        function drawGridLines(isAnimating = false) {
+            const { cols, rows, w, h, cells } = gridLayout;
+
+            for(let i=0; i<cells.length; i++) {
+                let col = i % cols;
+                let row = Math.floor(i / cols);
+                let x = col * w;
+                let y = row * h;
+                let content = cells[i];
+
+                if (content !== null) {
+                    ctx.strokeStyle = "#d500f9";
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x, y, w, h);
+                    ctx.fillStyle = "#fff";
+                    ctx.font = "20px Pretendard";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(content, x + w/2, y + h/2);
+                } else {
+                    let hue = (frameCount * 2 + i * 30) % 360; 
+                    if(!isAnimating) hue = (i * 30) % 360;
+
+                    ctx.fillStyle = `hsla(${hue}, 70%, 50%, 0.3)`;
+                    ctx.fillRect(x, y, w, h);
+                    ctx.strokeStyle = `hsl(${hue}, 100%, 70%)`;
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(x, y, w, h);
+
+                    ctx.fillStyle = "#fff";
+                    ctx.font = "bold 16px Pretendard";
+                    ctx.textAlign = "center";
+                    
+                    let text = "🚀 SPEED UP";
+                    if(isAnimating && Math.floor(frameCount / 10) % 2 === 0) ctx.fillStyle = "#ffeb3b";
+                    
+                    ctx.fillText(text, x + w/2, y + h/2);
+                }
+            }
+        }
+
+        function updateSidebar() {
+            const list = document.getElementById('sidebar-list');
+            const count = document.getElementById('count-display');
+            list.innerHTML = "";
+            count.innerText = balls.length;
+
+            balls.forEach(ball => {
+                const div = document.createElement('div');
+                div.className = 'participant-tag';
+                div.innerHTML = `
+                    <div class="dot" style="background:${ball.color}"></div>
+                    <span>${ball.name}</span>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // --- [수정됨] 결과를 항목별로 묶어서 보여주기 ---
+        function showFinalResults() {
+            const container = document.getElementById('result-container');
+            container.innerHTML = "";
+            
+            const { cols, rows, w, h, cells } = gridLayout;
+            
+            // 결과를 저장할 객체 (Dictionary) 생성
+            let groupedResults = {};
+            
+            // 타겟 이름별로 빈 배열 생성 (순서 유지)
+            // 중복된 타겟 이름이 있을 수 있으니 Set 사용 후 다시 정렬
+            let uniqueTargets = [...new Set(targetNames)];
+            uniqueTargets.forEach(t => groupedResults[t] = []);
+
+            // 모든 공의 위치 확인 및 분류
+            balls.forEach(ball => {
+                let col = Math.floor(ball.x / w);
+                let row = Math.floor(ball.y / h);
+                if(col >= cols) col = cols - 1;
+                if(row >= rows) row = rows - 1;
+
+                let index = row * cols + col;
+                let resultTarget = cells[index]; // 해당 칸의 이름 (예: 청소)
+
+                if(resultTarget && groupedResults[resultTarget]) {
+                    groupedResults[resultTarget].push(ball.name);
+                } else {
+                    // 혹시라도 예외가 발생하면 '기타'에 넣음
+                    if(!groupedResults["기타"]) groupedResults["기타"] = [];
+                    groupedResults["기타"].push(ball.name);
+                }
+            });
+
+            // HTML 생성
+            for (let target in groupedResults) {
+                let winners = groupedResults[target];
+                
+                // 당첨자가 있는 항목만 표시 (원하면 이 조건문 제거하여 모두 표시 가능)
+                if (winners.length > 0) {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'result-group';
+                    
+                    // 이름표(배지) 만들기
+                    let nameTags = winners.map(name => `<span class="name-badge">${name}</span>`).join('');
+
+                    groupDiv.innerHTML = `
+                        <div class="result-title">
+                            ${target} 
+                            <span class="result-count">${winners.length}명</span>
+                        </div>
+                        <div class="result-names">
+                            ${nameTags}
+                        </div>
+                    `;
+                    container.appendChild(groupDiv);
+                }
+            }
+
+            document.getElementById('result-modal').classList.add('active');
+        }
+
+        function openEditModal() {
+            document.getElementById('balls-input').value = ballNames.join('\n');
+            document.getElementById('targets-input').value = targetNames.join('\n');
+            document.getElementById('edit-modal').classList.add('active');
+        }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function parseList(text) {
+            const rawLines = text.split('\n');
+            let result = [];
+            rawLines.forEach(line => {
+                line = line.trim();
+                if(!line) return;
+                if(line.includes('*')) {
+                    const parts = line.split('*');
+                    const name = parts[0].trim();
+                    let count = parseInt(parts[1]);
+                    if(isNaN(count) || count < 1) count = 1;
+                    for(let k=0; k<count; k++) result.push(name);
+                } else {
+                    result.push(line);
+                }
+            });
+            return result;
+        }
+
+        function applySettings() {
+            const bRaw = document.getElementById('balls-input').value;
+            const tRaw = document.getElementById('targets-input').value;
+
+            ballNames = parseList(bRaw);
+            targetNames = parseList(tRaw);
+
+            if(ballNames.length < 1 || targetNames.length < 2) return alert("최소한의 데이터를 입력하세요.");
+
+            closeModal('edit-modal');
+            initGame(false); // 재설정 시엔 섞지 않음
+        }
+
+        function autoNum() {
+            const num = prompt("몇 명인가요?", "20");
+            if(!num) return;
+            let arr = [];
+            for(let i=1; i<=parseInt(num); i++) arr.push(i+"번");
+            document.getElementById('balls-input').value = arr.join('\n');
+        }
+
+        initGame(false);
+    </script>
+</body>
+</html>
